@@ -1,11 +1,17 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="Accueil - Système de Réservation">
+  <div class="text-center">
+    <h1 class="text-4xl font-bold mb-8">Bienvenue sur notre système de réservation</h1>
+    <div class="space-x-4">
+      <a href="/reservation" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+        Réserver maintenant
+      </a>
+      <a href="/admin" class="inline-block bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700">
+        Administration
+      </a>
+    </div>
+  </div>
 </Layout>
