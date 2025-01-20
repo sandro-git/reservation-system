@@ -1,0 +1,73 @@
+name: Deploy
+
+# Définit quand le workflow doit s'exécuter
+on:
+  # S'exécute sur les push sur la branche main
+  push:
+    branches: [main]
+  # S'exécute sur les pull requests vers main
+  pull_request:
+    branches: [main]
+  # Permet l'exécution manuelle depuis l'interface GitHub
+  workflow_dispatch:
+
+# Définit les variables d'environnement globales si nécessaire
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Étape 1: Checkout du code
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Étape 2: Configuration de Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'  # Active le cache pour npm
+
+      # Étape 3: Installation des dépendances
+      - name: Install Dependencies
+        run: |
+          npm ci  # Utilise package-lock.json pour une installation propre
+          npm audit  # Vérifie les vulnérabilités
+
+      # Étape 4: Lint et formatage (si configuré)
+      - name: Lint and Format Check
+        run: |
+          npm run lint || true  # À activer si vous configurez ESLint
+          npm run format || true  # À activer si vous configurez Prettier
+
+      # Étape 5: Tests (si configuré)
+      - name: Run Tests
+        run: npm run test || true  # À activer quand vous ajouterez des tests
+
+      # Étape 6: Build du projet
+      - name: Build
+        env:
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          npm run build
+          echo "Build completed successfully"
+
+      # Étape 7: Déploiement (exemple avec Netlify)
+      - name: Deploy to Netlify
+        if: success() && github.ref == 'refs/heads/main'  # Uniquement sur main et si le build réussit
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          npm install -g netlify-cli
+          netlify deploy --prod --dir=dist
+
+      # Étape 8: Notification de statut (optionnel)
+      - name: Notify deployment status
+        if: always()  # S'exécute même en cas d'échec
+        run: |
+          echo "Deployment status: ${{ job.status }}"
